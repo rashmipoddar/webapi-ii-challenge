@@ -21,10 +21,44 @@ router.post('/', (req, res) => {
 
 router.post('/:id/comments', (req, res) => {
   const comment = req.body;
-  console.log(comment);
+  // console.log(comment);
 
+  const id = req.params.id;
+  // console.log(id);
 
-
+  db.findById(id)
+    .then(blog => {
+      // console.log(blog);
+      if (blog.length > 0) {
+        if (!comment.text) {
+          res.status(400).send({error: 'Please provide text for the comment'});
+        } else {
+          db.insertComment({ ...comment, post_id: id})
+          .then(commentId => {
+            // console.log(commentId);
+            db.findCommentById(commentId.id)
+              .then(commentRes => {
+                // console.log(commentRes);
+                res.status(201).send(commentRes);
+              })
+              .catch(error => {
+                // console.log(error);
+                res.status(500).send('There was an error in getting the comment created');
+              })
+          })
+          .catch(error => {
+            // console.log(error);
+            res.status(500).send({error: 'There was an error while saving the comment to the database'});
+          })
+        } 
+      } else {
+        res.status(404).send({message: 'The post with the specified ID does not exist.'})
+      }
+    })
+    .catch(error => {
+      // console.log(error);
+      res.status(500).send({error: 'The posts information could not be retrieved.'});
+    })
 });
 
 router.get('/', (req, res) => {
@@ -116,7 +150,7 @@ router.put('/:id', (req, res) => {
   const id = req.params.id;
   // console.log(id);
   const updatedBlog = req.body;
-  console.log(updatedBlog);
+  // console.log(updatedBlog);
 
   db.findById(id)
     .then(response => {
@@ -129,18 +163,18 @@ router.put('/:id', (req, res) => {
         } else {
           db.update(id, updatedBlog)
           .then(updateResponse => {
-            console.log(updateResponse);
+            // console.log(updateResponse);
             res.status(200).send(updatedBlog);
           })
           .catch(error => {
-            console.log(error);
+            // console.log(error);
             res.status(500).send({error: 'The post information could not be modified.'});
           })
         }
       }
     })
     .catch(error => {
-      console.log(error);
+      // console.log(error);
       res.status(500).send({error: 'The post information could not be modified.'});
     })
 })
